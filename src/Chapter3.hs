@@ -1134,19 +1134,50 @@ You did it! Now it is time to the open pull request with your changes
 and summon @vrom911 and @chshersh for the review!
 -}
 
-data Fighter = Knight
-  { health :: Int,
-    attack :: Int,
-    defence :: Int
-  } | Monster
-  { health :: Int,
-    attack :: Int
+data Knight = Knight
+  { knHealth :: Int,
+    knAttack :: Int,
+    knDefense :: Int
   }
 
-resolveFight :: Fighter -> Fighter -> Int
-resolveFight x y = case x y of
-  Knight Knight -> expression
-  otherwise -> expression
+data Monster = Monster
+  { monHealth :: Int,
+    monAttack :: Int
+  }
+
+data KnightAction = KnStrike | Drink | Cast
+
+data MonsterAction = MonStrike | Run
+
+class Fighter a where
+  -- a Fighter can take damage equal to some Int. Returns a copy of the Kight with adjusted Health stat for the damage taken
+  reduceHealth :: a -> Int -> a
+  -- every Fighter needs an attack stat
+  attack :: a -> Int
+
+instance Fighter Knight where
+  reduceHealth knight damage
+    | knDefense knight >= damage = knight
+    | damage > knDefense knight + knHealth knight = knight { knHealth = 0 }
+    | otherwise = knight { knHealth = knHealth knight - (damage - knDefense knight) }
+  attack knight = knAttack knight
+
+instance Fighter Monster where
+  reduceHealth monster damage
+    | damage > monHealth monster = monster { monHealth = 0 }
+    | otherwise = monster { monHealth = monHealth monster - damage }
+  attack monster = monAttack monster
+
+strike :: (Fighter a, Fighter b) => a -> b -> b
+strike attacker defender = reduceHealth defender (attack attacker)
+
+drinkPotion :: Knight -> Int -> Knight
+drinkPotion knight strength = knight { knHealth = knHealth knight + strength }
+
+castSpell :: Knight -> Int -> Knight
+castSpell knight strength = knight { knHealth = knHealth knight + strength }
+
+fight :: (Fighter a, Fighter b, Fighter c) => a -> b -> [KnightAction] -> [MonsterAction] -> c
 
 {-
 =📜= Additional resources
